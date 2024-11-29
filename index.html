@@ -25,8 +25,6 @@
 
     <!-- MediaPipe Hands Library -->
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
-    <!-- MediaPipe Face Detection Library -->
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/face_detection.js"></script>
     <!-- MediaPipe Camera Utils -->
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
     <!-- MediaPipe Drawing Utils -->
@@ -34,13 +32,12 @@
 
     <script>
         async function main() {
-            // Get the canvas and set dimensions
             const canvas = document.getElementById('outputCanvas');
             const ctx = canvas.getContext('2d');
             canvas.width = 1280;
             canvas.height = 720;
 
-            // Load MediaPipe Hands
+            // Initialize MediaPipe Hands
             const hands = new Hands({
                 locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
             });
@@ -51,32 +48,13 @@
                 minTrackingConfidence: 0.7,
             });
 
-            // Load MediaPipe Face Detection
-            const faceDetection = new FaceDetection({
-                locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/${file}`
-            });
-            faceDetection.setOptions({
-                modelSelection: 0,
-                minDetectionConfidence: 0.7,
-            });
-
-            // Initialize the camera
-            const videoElement = document.createElement('video');
-            const camera = new Camera(videoElement, {
-                onFrame: async () => {
-                    await hands.send({ image: videoElement });
-                    await faceDetection.send({ image: videoElement });
-                },
-                width: 1280,
-                height: 720
-            });
-            camera.start();
-
-            // Draw hands and face on canvas
+            // Handle results from MediaPipe Hands
             hands.onResults((results) => {
+                // Clear canvas and draw the video frame
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
 
+                // Draw hand landmarks
                 if (results.multiHandLandmarks) {
                     for (const landmarks of results.multiHandLandmarks) {
                         DrawingUtils.drawConnectors(ctx, landmarks, Hands.HAND_CONNECTIONS, { color: '#FF0000', lineWidth: 2 });
@@ -85,23 +63,16 @@
                 }
             });
 
-            faceDetection.onResults((results) => {
-                if (results.detections) {
-                    for (const detection of results.detections) {
-                        const boundingBox = detection.boundingBox;
-                        ctx.beginPath();
-                        ctx.rect(
-                            boundingBox.xCenter - boundingBox.width / 2,
-                            boundingBox.yCenter - boundingBox.height / 2,
-                            boundingBox.width,
-                            boundingBox.height
-                        );
-                        ctx.strokeStyle = '#00FFFF';
-                        ctx.lineWidth = 2;
-                        ctx.stroke();
-                    }
-                }
+            // Initialize camera
+            const videoElement = document.createElement('video');
+            const camera = new Camera(videoElement, {
+                onFrame: async () => {
+                    await hands.send({ image: videoElement });
+                },
+                width: 1280,
+                height: 720
             });
+            camera.start();
         }
 
         main().catch((error) => console.error(error));
