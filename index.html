@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Camera Feed</title>
+    <title>Hand and Face Detection</title>
     <style>
         body {
             display: flex;
@@ -13,34 +13,95 @@
             margin: 0;
             background-color: #000;
         }
-        video {
-            max-width: 100%;
-            max-height: 100%;
+        canvas {
+            position: absolute;
             border: 2px solid white;
             border-radius: 10px;
         }
     </style>
 </head>
 <body>
-    <video id="cameraFeed" autoplay playsinline></video>
+    <canvas id="outputCanvas"></canvas>
+
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/face_detection.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
 
     <script>
-        async function startCamera() {
-            try {
-                // Access the user's camera
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-                const videoElement = document.getElementById('cameraFeed');
+        const canvas = document.getElementById('outputCanvas');
+        const ctx = canvas.getContext('2d');
 
-                // Set the video source to the camera stream
-                videoElement.srcObject = stream;
-            } catch (error) {
-                console.error("Error accessing the camera: ", error);
-                alert("Could not access the camera. Please allow camera permissions.");
-            }
+        async function main() {
+            // Load MediaPipe Hands
+            const hands = new Hands.Hands({
+                locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+            });
+            hands.setOptions({
+                maxNumHands: 2,
+                modelComplexity: 1,
+                minDetectionConfidence: 0.7,
+                minTrackingConfidence: 0.7,
+            });
+
+            // Load MediaPipe Face Detection
+            const faceDetection = new FaceDetection.FaceDetection({
+                locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/${file}`
+            });
+            faceDetection.setOptions({
+                modelSelection: 0,
+                minDetectionConfidence: 0.7,
+            });
+
+            // Initialize the camera
+            const videoElement = document.createElement('video');
+            const camera = new Camera.Camera(videoElement, {
+                onFrame: async () => {
+                    await hands.send({ image: videoElement });
+                    await faceDetection.send({ image: videoElement });
+                },
+                width: 1280,
+                height: 720
+            });
+            camera.start();
+
+            // Canvas dimensions
+            canvas.width = 1280;
+            canvas.height = 720;
+
+            // Draw hands and face on canvas
+            hands.onResults((results) => {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
+
+                if (results.multiHandLandmarks) {
+                    for (const landmarks of results.multiHandLandmarks) {
+                        DrawingUtils.drawConnectors(ctx, landmarks, Hands.HAND_CONNECTIONS, { color: '#FF0000', lineWidth: 2 });
+                        DrawingUtils.drawLandmarks(ctx, landmarks, { color: '#00FF00', lineWidth: 1 });
+                    }
+                }
+            });
+
+            faceDetection.onResults((results) => {
+                if (results.detections) {
+                    for (const detection of results.detections) {
+                        const boundingBox = detection.boundingBox;
+                        ctx.beginPath();
+                        ctx.rect(
+                            boundingBox.xCenter - boundingBox.width / 2,
+                            boundingBox.yCenter - boundingBox.height / 2,
+                            boundingBox.width,
+                            boundingBox.height
+                        );
+                        ctx.strokeStyle = '#00FFFF';
+                        ctx.lineWidth = 2;
+                        ctx.stroke();
+                    }
+                }
+            });
         }
 
-        // Start the camera feed when the page loads
-        window.onload = startCamera;
+        main().catch((error) => console.error(error));
     </script>
 </body>
 </html>
