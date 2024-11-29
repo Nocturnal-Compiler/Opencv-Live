@@ -31,11 +31,37 @@
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
 
     <script>
+        // Check if DrawingUtils is ready
+        function waitForDrawingUtils() {
+            return new Promise((resolve, reject) => {
+                let retries = 0;
+                const interval = setInterval(() => {
+                    if (typeof DrawingUtils !== 'undefined') {
+                        clearInterval(interval);
+                        resolve(DrawingUtils);
+                    }
+                    retries++;
+                    if (retries > 10) { // retry 10 times before failing
+                        clearInterval(interval);
+                        reject('DrawingUtils not found');
+                    }
+                }, 100);
+            });
+        }
+
         async function main() {
             const canvas = document.getElementById('outputCanvas');
             const ctx = canvas.getContext('2d');
             canvas.width = 1280;
             canvas.height = 720;
+
+            // Wait for DrawingUtils to be available
+            try {
+                await waitForDrawingUtils();
+            } catch (error) {
+                console.error(error);
+                return;
+            }
 
             // Initialize MediaPipe Hands
             const hands = new Hands({
@@ -54,17 +80,19 @@
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
 
-                // Draw hand landmarks using the global DrawingUtils if it's loaded
-                if (typeof DrawingUtils !== 'undefined') {
-                    if (results.multiHandLandmarks) {
-                        for (const landmarks of results.multiHandLandmarks) {
-                            // Draw hand landmarks and connectors using DrawingUtils
-                            DrawingUtils.drawConnectors(ctx, landmarks, Hands.HAND_CONNECTIONS, { color: '#FF0000', lineWidth: 2 });
-                            DrawingUtils.drawLandmarks(ctx, landmarks, { color: '#00FF00', lineWidth: 1 });
-                        }
+                // Draw hand landmarks and face box using DrawingUtils
+                if (results.multiHandLandmarks) {
+                    for (const landmarks of results.multiHandLandmarks) {
+                        DrawingUtils.drawConnectors(ctx, landmarks, Hands.HAND_CONNECTIONS, { color: '#FF0000', lineWidth: 2 });
+                        DrawingUtils.drawLandmarks(ctx, landmarks, { color: '#00FF00', lineWidth: 1 });
                     }
-                } else {
-                    console.error('DrawingUtils is not defined.');
+                }
+
+                // Optional: Draw the face bounding box
+                if (results.multiFaceLandmarks) {
+                    results.multiFaceLandmarks.forEach((landmarks) => {
+                        DrawingUtils.drawConnectors(ctx, landmarks, Hands.FACEMESH_TESSELATION, { color: '#FFFFFF', lineWidth: 1 });
+                    });
                 }
             });
 
