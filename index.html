@@ -23,18 +23,25 @@
 <body>
     <canvas id="outputCanvas"></canvas>
 
+    <!-- MediaPipe Hands Library -->
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+    <!-- MediaPipe Face Detection Library -->
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/face_detection.js"></script>
+    <!-- MediaPipe Camera Utils -->
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+    <!-- MediaPipe Drawing Utils -->
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
 
     <script>
-        const canvas = document.getElementById('outputCanvas');
-        const ctx = canvas.getContext('2d');
-
         async function main() {
+            // Get the canvas and set dimensions
+            const canvas = document.getElementById('outputCanvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = 1280;
+            canvas.height = 720;
+
             // Load MediaPipe Hands
-            const hands = new Hands.Hands({
+            const hands = new Hands({
                 locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
             });
             hands.setOptions({
@@ -45,7 +52,7 @@
             });
 
             // Load MediaPipe Face Detection
-            const faceDetection = new FaceDetection.FaceDetection({
+            const faceDetection = new FaceDetection({
                 locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/${file}`
             });
             faceDetection.setOptions({
@@ -55,7 +62,7 @@
 
             // Initialize the camera
             const videoElement = document.createElement('video');
-            const camera = new Camera.Camera(videoElement, {
+            const camera = new Camera(videoElement, {
                 onFrame: async () => {
                     await hands.send({ image: videoElement });
                     await faceDetection.send({ image: videoElement });
@@ -64,10 +71,6 @@
                 height: 720
             });
             camera.start();
-
-            // Canvas dimensions
-            canvas.width = 1280;
-            canvas.height = 720;
 
             // Draw hands and face on canvas
             hands.onResults((results) => {
