@@ -27,6 +27,8 @@
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
     <!-- MediaPipe Camera Utils -->
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+    <!-- MediaPipe Drawing Utils -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
 
     <script>
         async function main() {
@@ -34,6 +36,14 @@
             const ctx = canvas.getContext('2d');
             canvas.width = 1280;
             canvas.height = 720;
+
+            // Check if DrawingUtils is loaded
+            if (typeof window.DrawingUtils === 'undefined') {
+                console.error('DrawingUtils not loaded. Ensure the drawing_utils.js script is included.');
+                return;
+            }
+
+            const drawingUtils = window.DrawingUtils;
 
             // Initialize MediaPipe Hands
             const hands = new Hands({
@@ -52,11 +62,11 @@
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
 
-                // Draw hand landmarks and connections using MediaPipe's built-in API
+                // Draw hand landmarks
                 if (results.multiHandLandmarks) {
                     for (const landmarks of results.multiHandLandmarks) {
-                        Hands.drawConnectors(ctx, landmarks, Hands.HAND_CONNECTIONS, { color: '#FF0000', lineWidth: 2 });
-                        Hands.drawLandmarks(ctx, landmarks, { color: '#00FF00', lineWidth: 1 });
+                        drawingUtils.drawConnectors(ctx, landmarks, Hands.HAND_CONNECTIONS, { color: '#FF0000', lineWidth: 2 });
+                        drawingUtils.drawLandmarks(ctx, landmarks, { color: '#00FF00', lineWidth: 1 });
                     }
                 }
             });
