@@ -57,9 +57,9 @@
                 // Draw hand landmarks
                 if (results.multiHandLandmarks) {
                     for (const landmarks of results.multiHandLandmarks) {
-                        // Use DrawingUtils to draw landmarks and connections
-                        drawingUtils.drawConnectors(ctx, landmarks, Hands.HAND_CONNECTIONS, { color: '#FF0000', lineWidth: 2 });
-                        drawingUtils.drawLandmarks(ctx, landmarks, { color: '#00FF00', lineWidth: 1 });
+                        // Correct usage of DrawingUtils
+                        DrawingUtils.drawConnectors(ctx, landmarks, Hands.HAND_CONNECTIONS, { color: '#FF0000', lineWidth: 2 });
+                        DrawingUtils.drawLandmarks(ctx, landmarks, { color: '#00FF00', lineWidth: 1 });
                     }
                 }
             });
