@@ -25,10 +25,10 @@
 
     <!-- MediaPipe Hands Library -->
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
-    <!-- MediaPipe Camera Utils -->
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
     <!-- MediaPipe Drawing Utils -->
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
+    <!-- MediaPipe Camera Utils -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
 
     <script>
         async function main() {
@@ -37,9 +37,9 @@
             canvas.width = 1280;
             canvas.height = 720;
 
-            // Check if DrawingUtils is loaded
+            // Verify DrawingUtils is loaded
             if (typeof window.DrawingUtils === 'undefined') {
-                console.error('DrawingUtils not loaded. Ensure the drawing_utils.js script is included.');
+                console.error('DrawingUtils not loaded. Ensure the drawing_utils.js script is properly imported.');
                 return;
             }
 
