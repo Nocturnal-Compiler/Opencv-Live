@@ -57,9 +57,13 @@
                 // Draw hand landmarks
                 if (results.multiHandLandmarks) {
                     for (const landmarks of results.multiHandLandmarks) {
-                        // Correct usage of DrawingUtils
-                        DrawingUtils.drawConnectors(ctx, landmarks, Hands.HAND_CONNECTIONS, { color: '#FF0000', lineWidth: 2 });
-                        DrawingUtils.drawLandmarks(ctx, landmarks, { color: '#00FF00', lineWidth: 1 });
+                        // DrawingUtils from the global scope
+                        if (typeof DrawingUtils !== 'undefined') {
+                            DrawingUtils.drawConnectors(ctx, landmarks, Hands.HAND_CONNECTIONS, { color: '#FF0000', lineWidth: 2 });
+                            DrawingUtils.drawLandmarks(ctx, landmarks, { color: '#00FF00', lineWidth: 1 });
+                        } else {
+                            console.error('DrawingUtils is not defined.');
+                        }
                     }
                 }
             });
