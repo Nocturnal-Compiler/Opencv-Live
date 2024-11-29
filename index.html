@@ -54,17 +54,17 @@
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
 
-                // Draw hand landmarks
-                if (results.multiHandLandmarks) {
-                    for (const landmarks of results.multiHandLandmarks) {
-                        // DrawingUtils from the global scope
-                        if (typeof DrawingUtils !== 'undefined') {
+                // Draw hand landmarks using the global DrawingUtils if it's loaded
+                if (typeof DrawingUtils !== 'undefined') {
+                    if (results.multiHandLandmarks) {
+                        for (const landmarks of results.multiHandLandmarks) {
+                            // Draw hand landmarks and connectors using DrawingUtils
                             DrawingUtils.drawConnectors(ctx, landmarks, Hands.HAND_CONNECTIONS, { color: '#FF0000', lineWidth: 2 });
                             DrawingUtils.drawLandmarks(ctx, landmarks, { color: '#00FF00', lineWidth: 1 });
-                        } else {
-                            console.error('DrawingUtils is not defined.');
                         }
                     }
+                } else {
+                    console.error('DrawingUtils is not defined.');
                 }
             });
 
